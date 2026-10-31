@@ -7,16 +7,9 @@ pipeline {
     }
 
     stages {
-        stage('Checkout') {
+        stage('Test') {
             steps {
-                checkout scm
-            }
-        }
-
-        stage('Check Docker') {
-            steps {
-                sh 'which docker'
-                sh 'docker version'
+                sh 'docker build --target test -t todo-app-test:${BUILD_NUMBER} .'
             }
         }
 
