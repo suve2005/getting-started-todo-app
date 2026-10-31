@@ -44,6 +44,21 @@ stage('Push to Docker Hub') {
         }
     }
 }
+stage('Test Kubernetes Connection') {
+    steps {
+        withCredentials([
+            file(
+                credentialsId: 'kubernetes-config',
+                variable: 'KUBECONFIG'
+            )
+        ]) {
+            sh '''
+                kubectl get nodes
+                kubectl get deployments
+            '''
+        }
+    }
+}
 
         stage('Verify Docker Image') {
             steps {
