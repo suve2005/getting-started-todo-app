@@ -44,7 +44,7 @@ stage('Push to Docker Hub') {
         }
     }
 }
-stage('Test Kubernetes Connection') {
+stage('Deploy to Kubernetes') {
     steps {
         withCredentials([
             file(
@@ -53,8 +53,27 @@ stage('Test Kubernetes Connection') {
             )
         ]) {
             sh '''
-                kubectl get nodes
-                kubectl get deployments
+                set -e
+
+                # Tag the newly built image
+                docker tag todo-app:${BUILD_NUMBER} \
+                    suvethican/todo-app:${BUILD_NUMBER}
+
+                # Load image into the local kind cluster
+                kind load docker-image \
+                    suvethican/todo-app:${BUILD_NUMBER} \
+                    --name devops-lab
+
+                # Update the Kubernetes Deployment
+                kubectl set image deployment/todo-app \
+                    todo-app=suvethican/todo-app:${BUILD_NUMBER}
+
+                # Wait for successful deployment
+                kubectl rollout status deployment/todo-app \
+                    --timeout=180s
+
+                # Verify the running pods
+                kubectl get pods -l app=todo-app
             '''
         }
     }
